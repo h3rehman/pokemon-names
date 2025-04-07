@@ -1,103 +1,88 @@
+'use client'
 import Image from "next/image";
+import { useState, useEffect } from "react";
+
+const fetchedNames = async () => {
+  const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151&offset=0');
+  const rawData = await response.json();
+  console.log("Single Result: " + JSON.stringify(rawData.results[0]));
+  const totalCount = rawData.results.length;
+  console.log("Array count: " + totalCount);
+  const pokemonNames = rawData.results.map(result => result.name);
+  pokemonNames.sort();
+  console.log("Type: " + pokemonNames[0]);
+  return {
+    totalCount,
+    pokemonNames
+  };
+}
+
 
 export default function Home() {
+  const [names, setNames] = useState([]);
+  const [maxCount, setMaxCount] = useState(0);
+  const [startIndex, setStartIndex] = useState(0);
+  const [chunk, setChunk] = useState([]);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    fetchedNames().then(pokemon => {
+      setNames(pokemon.pokemonNames);
+      setMaxCount(pokemon.totalCount);
+      setChunk(pokemon.pokemonNames.slice(0, 10));   
+      })
+    }, []);  
+
+  const previousChunk = async () => {
+    console.log("Current index: " + startIndex);
+    if (startIndex > 0){
+      setChunk(names.slice(startIndex - 10, startIndex));
+      setStartIndex(startIndex - 10);
+      setPage(page-1);
+    }
+  }    
+  
+  const nextChunk = async () => {
+    console.log("Current index: " + startIndex);
+    if (startIndex < maxCount){
+      setChunk(names.slice(startIndex + 10, startIndex + 20));
+      setStartIndex(startIndex + 10);
+      setPage(page+1);
+    }
+  }  
+
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      <p>Pokemon Names</p>
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
+        <div>
+          {chunk.map(name => <div key={name.url}>{name}</div>) }
+        </div>
         <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
+          <button
             className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={previousChunk}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            Previous
+          </button>
+
+        <div>
+         <strong>{page}</strong>          
+        </div>
+
+          <button
+            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={nextChunk}
           >
-            Read our docs
-          </a>
+            Next
+          </button>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
